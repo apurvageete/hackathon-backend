@@ -1,63 +1,65 @@
-package com.example.demo;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import java.util.List;
+import java.util.Map;
 
-@SpringBootApplication
-public class DemoApplication {
-	public static void main(String[] args) {
-		SpringApplication.run(DemoApplication.class, args);
-	}
-}
+@Data
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class ChatbotResponse {
+	private List<Content> content;
+	private List<Object> sources;
+	private ChatbotData chatbotData;
 
-package com.example.demo.controller;
-
-		import com.example.demo.service.FormDataService;
-		import org.springframework.http.ResponseEntity;
-		import org.springframework.web.bind.annotation.*;
-		import java.util.Map;
-
-@RestController
-@RequestMapping("/api")
-public class FormDataController {
-	private final FormDataService formDataService;
-
-	public FormDataController(FormDataService formDataService) {
-		this.formDataService = formDataService;
+	@Data
+	public static class Content {
+		private String type;
+		private String value;
 	}
 
-	@PostMapping("/submit")
-	public ResponseEntity<String> handleFormData(@RequestParam Map<String, String> formData,
-												 @RequestHeader("Authorization") String token) {
-		return formDataService.processFormData(formData, token);
+	@Data
+	public static class ChatbotData {
+		private ChatbotMetadata chatbotMetadata;
 	}
-}
 
-package com.example.demo.service;
+	@Data
+	public static class ChatbotMetadata {
+		private String agentType;
+		private ModelMetadata modelMetadata;
+		private PromptMetadata promptMetadata;
+		private String conversationId;
+		private String questionId;
+		private String chatbotId;
+	}
 
-		import org.springframework.http.*;
-		import org.springframework.stereotype.Service;
-		import org.springframework.web.client.RestTemplate;
-		import org.springframework.util.LinkedMultiValueMap;
-		import org.springframework.util.MultiValueMap;
-		import java.util.Map;
+	@Data
+	public static class ModelMetadata {
+		private String deploymentId;
+		private String apiVersion;
+	}
 
-@Service
-public class FormDataService {
-	private final RestTemplate restTemplate = new RestTemplate();
-	private final String EXTERNAL_API_URL = "https://external-api.com/endpoint";
+	@Data
+	public static class PromptMetadata {
+		private List<Prompt> prompt;
+		private OpenAiChatCompletionParameters openAiChatCompletionParameters;
+	}
 
-	public ResponseEntity<String> processFormData(Map<String, String> formData, String token) {
-		MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-		body.setAll(formData);
+	@Data
+	public static class Prompt {
+		private String role;
+		private String content;
+	}
 
-		HttpHeaders headers = new HttpHeaders();
-		headers.set("Authorization", token);
-		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+	@Data
+	public static class OpenAiChatCompletionParameters {
+		private double temperature;
+		private int maxTokens;
+		private double presencePenalty;
+		private double frequencyPenalty;
+		private List<String> stop;
 
-		HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(body, headers);
-		ResponseEntity<String> response = restTemplate.exchange(EXTERNAL_API_URL, HttpMethod.POST, requestEntity, String.class);
-
-		return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
+		@JsonProperty("top_p")
+		private Double topP;
 	}
 }
